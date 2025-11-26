@@ -47,7 +47,6 @@ int main(){
     // DP: dp[i][j] = energia máxima para remover todos entre i e j
     int N = n+2;
     vector<vector<ll>> dp(N, vector<ll>(N, LLONG_MIN));
-    vector<vector<int>> choice(N, vector<int>(N, -1)); // para reconstrução
     
     // Base: intervalos vazios ou adjacentes
     for(int i=0; i<N; i++) {
@@ -56,6 +55,8 @@ int main(){
     }
 
     // Preencher por comprimento crescente
+    vector<vector<int>> choice(N, vector<int>(N, -1));
+    
     for(int len = 2; len <= n+1; ++len){
         for(int i=0; i+len < N; ++i){
             int j = i + len;
@@ -78,47 +79,69 @@ int main(){
         }
     }
 
-    // Reconstrução da sequência lexicograficamente menor
-    // Memoização para evitar recomputação
-    map<pair<int,int>, vector<int>> memo;
+    // Reconstrução com memoização usando índices ao invés de cópias
+    map<pair<int,int>, pair<bool, int>> memo; // {processado, índice_inicio_no_result}
+    vector<int> result;
+    result.reserve(n);
     
-    function<vector<int>(int,int)> reconstruct = [&](int i, int j)->vector<int>{
-        if(i+1 >= j) return {}; // intervalo vazio
+    function<int(int,int)> build = [&](int i, int j) -> int {
+        if(i+1 >= j) return result.size();
         
         auto key = make_pair(i, j);
-        if(memo.count(key)) return memo[key];
+        if(memo.count(key)) return memo[key].second;
         
         ll target = dp[i][j];
-        vector<int> bestSeq;
-        bool found = false;
+        int startIdx = result.size();
+        int bestK = -1;
+        int bestStartIdx = -1;
         
-        // Testar todos os k's que dão o valor ótimo e escolher a menor sequência
         for(int k = i+1; k < j; ++k){
             ll contrib = P[i] * (ll)Af(C[i], C[k]) * P[k] + 
                          P[k] * (ll)Af(C[k], C[j]) * P[j];
-            ll candVal = dp[i][k] + dp[k][j] + contrib;
-            
-            if(candVal == target){
-                vector<int> left = reconstruct(i, k);
-                vector<int> right = reconstruct(k, j);
-                vector<int> cand;
-                cand.reserve(left.size() + right.size() + 1);
-                cand.insert(cand.end(), left.begin(), left.end());
-                cand.insert(cand.end(), right.begin(), right.end());
-                cand.push_back(k);
+            if(dp[i][k] + dp[k][j] + contrib == target){
+                // Tentar este k
+                int tmpSize = result.size();
+                build(i, k);
+                build(k, j);
+                result.push_back(k);
                 
-                if(!found || cand < bestSeq){
-                    bestSeq = move(cand);
-                    found = true;
+                if(bestK == -1){
+                    // Primeira solução
+                    bestK = k;
+                    bestStartIdx = tmpSize;
+                } else {
+                    // Comparar sequências
+                    bool isBetter = false;
+                    int len1 = result.size() - bestStartIdx;
+                    int len2 = result.size() - tmpSize;
+                    
+                    for(int idx = 0; idx < min(len2, len1); ++idx){
+                        if(result[tmpSize + idx] < result[bestStartIdx + idx]){
+                            isBetter = true;
+                            break;
+                        } else if(result[tmpSize + idx] > result[bestStartIdx + idx]){
+                            break;
+                        }
+                    }
+                    
+                    if(isBetter){
+                        // Nova sequência é melhor, descartar a antiga
+                        result.erase(result.begin() + bestStartIdx, result.begin() + tmpSize);
+                        bestStartIdx = result.size() - len2;
+                        bestK = k;
+                    } else {
+                        // Manter antiga, descartar nova
+                        result.erase(result.begin() + tmpSize, result.end());
+                    }
                 }
             }
         }
         
-        memo[key] = bestSeq;
-        return bestSeq;
+        memo[key] = {true, bestStartIdx};
+        return bestStartIdx;
     };
     
-    vector<int> result = reconstruct(0, n+1);
+    build(0, n+1);
 
     // Output
     cout << dp[0][n+1] << "\n";

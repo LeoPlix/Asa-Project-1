@@ -1,5 +1,11 @@
 // g++ -std=c++11 -O3 -Wall asaProjeto.cpp -lm
-#include <bits/stdc++.h>
+#include <iostream>
+#include <vector>
+#include <string>
+#include <map>
+#include <functional>
+#include <climits>
+#include <utility>
 using namespace std;
 using ll = long long;
 

@@ -114,7 +114,7 @@ int main(){
                 cand.push_back(k);
                 
                 if(!found || cand < bestSeq){
-                    bestSeq = move(cand);
+                    bestSeq = std::move(cand);
                     found = true;
                 }
             }

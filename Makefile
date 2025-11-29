@@ -1,48 +1,52 @@
-# Makefile para Projeto ASA 2025/2026
+# Makefile for ASA Project 2025/2026 
 
-# Compilador e flags
+# Compiler and flags
 CXX = g++
-CXXFLAGS = -std=c++11 -O3 -Wall
+CXXFLAGS = -std=c++17 -O3 -Wall -Wextra
 LDFLAGS = -lm
 
-# Alvos
-TARGET = asaProjeto
-GERADOR = gerador_p1
+# Targets (English names)
+TARGET = protein_chain
+GENERATOR = generator
 
-# Ficheiros fonte
-SRC = asaProjeto.cpp
-GERADOR_SRC = gerador_p1.cpp
+# Source files (English names)
+SRC = protein_chain.cpp
+GENERATOR_SRC = generator.cpp
 
-# Alvo padrão
-all: $(TARGET) $(GERADOR)
+# Default target
+all: $(TARGET) $(GENERATOR)
 
-# Compilar o programa principal
+# Build main program
 $(TARGET): $(SRC)
-	$(CXX) $(CXXFLAGS) $(SRC) -o $(TARGET) $(LDFLAGS)
+	$(CXX) $(CXXFLAGS) $< -o $@ $(LDFLAGS)
 
-# Compilar o gerador
-$(GERADOR): $(GERADOR_SRC)
-	$(CXX) $(CXXFLAGS) $(GERADOR_SRC) -o $(GERADOR)
+# Build generator
+$(GENERATOR): $(GENERATOR_SRC)
+	$(CXX) $(CXXFLAGS) $< -o $@ $(LDFLAGS)
 
-# Executar o programa
+# Run the main program
 run: $(TARGET)
 	./$(TARGET)
 
-# Testar com os exemplos do enunciado
+# Test with the examples from the statement
 test: $(TARGET)
-	@echo "=== Teste Exemplo 1 ==="
+	@echo "=== Example Test 1 ==="
 	@echo "3\n10 5 12\nABA" | ./$(TARGET)
-	@echo "\n=== Teste Exemplo 2 ==="
+	@echo "\n=== Example Test 2 ==="
 	@echo "9\n4 2 7 3 5 1 2 8 3\nANBPAPBNA" | ./$(TARGET)
 
-# Limpar ficheiros compilados
+# Clean build artifacts
 clean:
-	rm -f $(TARGET) $(GERADOR) *.out *.o
+	rm -f $(TARGET) $(GENERATOR) *.out *.o
 
-# Limpar tudo incluindo ficheiros temporários
+# Remove editor temporary files as well
 distclean: clean
 	rm -f *~ *.swp
 
+# Rebuild from scratch
+rebuild: clean all
+
+.PHONY: all run test clean distclean rebuild
 # Recompilar tudo
 rebuild: clean all
 

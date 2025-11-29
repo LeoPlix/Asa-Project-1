@@ -2,17 +2,12 @@
 #include <iostream>
 #include <vector>
 #include <string>
-#include <unordered_map>
+#include <map>
 #include <functional>
 #include <climits>
+#include <utility>
 using namespace std;
 using ll = long long;
-
-struct PairHash {
-    size_t operator()(const pair<int,int>& p) const {
-        return ((size_t)p.first << 32) | (size_t)p.second;
-    }
-};
 
 int main(){
     ios::sync_with_stdio(false);
@@ -58,6 +53,7 @@ int main(){
     // DP: dp[i][j] = energia máxima para remover todos entre i e j
     int N = n+2;
     vector<vector<ll>> dp(N, vector<ll>(N, LLONG_MIN));
+    vector<vector<int>> choice(N, vector<int>(N, -1)); // para reconstrução
     
     // Base: intervalos vazios ou adjacentes
     for(int i=0; i<N; i++) {
@@ -70,35 +66,36 @@ int main(){
         for(int i=0; i+len < N; ++i){
             int j = i + len;
             ll best = LLONG_MIN;
+            int bestK = -1;
             
             for(int k = i+1; k < j; ++k){
-                ll contrib = P[i] * (ll)Af(C[i], C[k]) * P[k] +  
-                             P[k] * (ll)Af(C[k], C[j]) * P[j];   
+                ll contrib = P[i] * Af(C[i], C[k]) * P[k] +  
+                             P[k] * Af(C[k], C[j]) * P[j];   
                 ll cand = dp[i][k] + dp[k][j] + contrib;
                 
                 if(cand > best){
                     best = cand;
+                    bestK = k;
                 }
             }
             
             dp[i][j] = best;
+            choice[i][j] = bestK;
         }
     }
 
     // Reconstrução da sequência lexicograficamente menor
-    unordered_map<pair<int,int>, vector<int>, PairHash> memo;
-    memo.reserve(N * N / 2);
+    map<pair<int,int>, vector<int>> memo;
     
-    function<const vector<int>&(int,int)> reconstruct = [&](int i, int j)->const vector<int>&{
-        static const vector<int> empty;
-        if(i+1 >= j) return empty;
+    function<vector<int>(int,int)> reconstruct = [&](int i, int j)->vector<int>{
+        if(i+1 >= j) return {}; // intervalo vazio
         
         auto key = make_pair(i, j);
-        auto it = memo.find(key);
-        if(it != memo.end()) return it->second;
+        if(memo.count(key)) return memo[key];
         
         ll target = dp[i][j];
         vector<int> bestSeq;
+        int bestK = -1;
         
         // Apenas testar k's que dão o valor ótimo, começando pelo menor
         for(int k = i+1; k < j; ++k){
@@ -107,21 +104,23 @@ int main(){
             ll candVal = dp[i][k] + dp[k][j] + contrib;
             
             if(candVal == target){
-                const vector<int>& left = reconstruct(i, k);
-                const vector<int>& right = reconstruct(k, j);
+                vector<int> left = reconstruct(i, k);
+                vector<int> right = reconstruct(k, j);
                 vector<int> cand;
                 cand.reserve(left.size() + right.size() + 1);
                 cand.insert(cand.end(), left.begin(), left.end());
                 cand.insert(cand.end(), right.begin(), right.end());
                 cand.push_back(k);
                 
-                if(bestSeq.empty() || cand < bestSeq){
+                if(bestK == -1 || cand < bestSeq){
                     bestSeq = std::move(cand);
+                    bestK = k;
                 }
             }
         }
         
-        return memo[key] = std::move(bestSeq);
+        memo[key] = bestSeq;
+        return bestSeq;
     };
     
     vector<int> result = reconstruct(0, n+1);

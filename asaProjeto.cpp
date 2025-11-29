@@ -1,10 +1,5 @@
 // g++ -std=c++11 -O3 -Wall asaProjeto.cpp -lm
-#include <iostream>
-#include <vector>
-#include <string>
-#include <unordered_map>
-#include <functional>
-#include <climits>
+#include <bits/stdc++.h>
 using namespace std;
 using ll = long long;
 
@@ -116,7 +111,7 @@ int main(){
                 cand.push_back(k);
                 
                 if(bestSeq.empty() || cand < bestSeq){
-                    bestSeq = std::move(cand);
+                    bestSeq = move(cand);
                 }
             }
         }

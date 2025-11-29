@@ -1,5 +1,11 @@
 // g++ -std=c++11 -O3 -Wall asaProjeto.cpp -lm
-#include <bits/stdc++.h>
+#include <iostream>
+#include <vector>
+#include <string>
+#include <map>
+#include <functional>
+#include <climits>
+#include <utility>
 using namespace std;
 using ll = long long;
 
@@ -63,8 +69,8 @@ int main(){
             int bestK = -1;
             
             for(int k = i+1; k < j; ++k){
-                ll contrib = P[i] * (ll)Af(C[i], C[k]) * P[k] + 
-                             P[k] * (ll)Af(C[k], C[j]) * P[j];
+                ll contrib = P[i] * Af(C[i], C[k]) * P[k] +  
+                             P[k] * Af(C[k], C[j]) * P[j];   
                 ll cand = dp[i][k] + dp[k][j] + contrib;
                 
                 if(cand > best){
@@ -79,7 +85,6 @@ int main(){
     }
 
     // Reconstrução da sequência lexicograficamente menor
-    // Memoização para evitar recomputação
     map<pair<int,int>, vector<int>> memo;
     
     function<vector<int>(int,int)> reconstruct = [&](int i, int j)->vector<int>{
@@ -90,9 +95,9 @@ int main(){
         
         ll target = dp[i][j];
         vector<int> bestSeq;
-        bool found = false;
+        int bestK = -1;
         
-        // Testar todos os k's que dão o valor ótimo e escolher a menor sequência
+        // Apenas testar k's que dão o valor ótimo, começando pelo menor
         for(int k = i+1; k < j; ++k){
             ll contrib = P[i] * (ll)Af(C[i], C[k]) * P[k] + 
                          P[k] * (ll)Af(C[k], C[j]) * P[j];
@@ -107,9 +112,9 @@ int main(){
                 cand.insert(cand.end(), right.begin(), right.end());
                 cand.push_back(k);
                 
-                if(!found || cand < bestSeq){
-                    bestSeq = move(cand);
-                    found = true;
+                if(bestK == -1 || cand < bestSeq){
+                    bestSeq = std::move(cand);
+                    bestK = k;
                 }
             }
         }

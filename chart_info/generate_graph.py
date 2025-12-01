@@ -23,7 +23,7 @@ plt.figure(figsize=(10, 6))
 plt.plot(n_cubico, tempos, 'b-o', linewidth=2, markersize=6)
 
 # Configurar o gráfico
-plt.xlabel('f(n,m) = n³ (×10⁶)', fontsize=12)
+plt.xlabel('f(n) = n³ (×10⁶)', fontsize=12)
 plt.ylabel('Tempo (s)', fontsize=12)
 plt.grid(True, alpha=0.3)
 
